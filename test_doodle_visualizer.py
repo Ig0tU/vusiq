@@ -26,6 +26,15 @@ class TestDoodleVisualizer(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir, ignore_errors=True)
 
+    def test_requirements_file_exists(self):
+        self.assertTrue(os.path.exists("requirements.txt"))
+        with open("requirements.txt") as f:
+            content = f.read()
+            self.assertIn("google-genai", content)
+            self.assertIn("pillow", content)
+            self.assertIn("moviepy", content)
+            self.assertIn("pydantic", content)
+
     def test_schema_instantiation(self):
         item = LineMorph(
             line_index=0,
