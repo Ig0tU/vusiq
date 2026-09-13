@@ -12,7 +12,6 @@ from unittest.mock import patch, MagicMock
 from doodle_visualizer import (
     LineMorph,
     SequenceBreakdown,
-    mock_parse_lyrics,
     parse_lyrics_to_morph_sequence,
     create_preview_frame,
     build_doodle_sequence,
@@ -42,21 +41,18 @@ class TestDoodleVisualizer(unittest.TestCase):
         sequence = SequenceBreakdown(items=[item])
         self.assertEqual(len(sequence.items), 1)
 
-    def test_mock_parse_lyrics(self):
-        text = "line one\nline two"
-        items = mock_parse_lyrics(text)
-        self.assertEqual(len(items), 2)
-        self.assertEqual(items[0].line_index, 0)
-        self.assertEqual(items[0].spoken_text, "line one")
-        self.assertEqual(items[1].line_index, 1)
+    def test_parse_lyrics_missing_api_key(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(ValueError):
+                parse_lyrics_to_morph_sequence("grab a thesaurus")
 
     def test_create_preview_frame(self):
         item = LineMorph(
             line_index=99,
-            spoken_text="test line",
+            spoken_text="test line for doodle frame rendering",
             kinetic_word="TEST",
             condensed_object="test_object",
-            morph_action="Morph action description",
+            morph_action="Morph action description for continuous B&W transformation",
             visual_description="Visual description",
         )
         path = create_preview_frame(item)
@@ -76,7 +72,7 @@ class TestDoodleVisualizer(unittest.TestCase):
                     "line_index": 0,
                     "spoken_text": "grab a thesaurus",
                     "kinetic_word": "THESAURUS",
-                    "condensed_object": "dinosaur",
+                    "condensed_object": "STEGOSAURUS",
                     "morph_action": "Letters morph to dinosaur",
                     "visual_description": "B&W doodle of dinosaur",
                 }
@@ -87,13 +83,33 @@ class TestDoodleVisualizer(unittest.TestCase):
         with patch.dict(os.environ, {"GEMINI_API_KEY": "fake_key"}):
             items = parse_lyrics_to_morph_sequence("grab a thesaurus")
             self.assertEqual(len(items), 1)
-            self.assertEqual(items[0].condensed_object, "dinosaur")
+            self.assertEqual(items[0].condensed_object, "STEGOSAURUS")
 
-    def test_build_doodle_sequence(self):
+    @patch("doodle_visualizer.parse_lyrics_to_morph_sequence")
+    def test_build_doodle_sequence(self, mock_parse):
+        mock_parse.return_value = [
+            LineMorph(
+                line_index=0,
+                spoken_text="grab a thesaurus",
+                kinetic_word="THESAURUS",
+                condensed_object="STEGOSAURUS",
+                morph_action="Morph 1",
+                visual_description="Desc 1",
+            ),
+            LineMorph(
+                line_index=1,
+                spoken_text="get that vocab maxed",
+                kinetic_word="MAXED",
+                condensed_object="BATTERY METER",
+                morph_action="Morph 2",
+                visual_description="Desc 2",
+            ),
+        ]
+
         sample = "grab a thesaurus\nget that vocab maxed"
         out_mp4 = os.path.join(self.test_dir, "test_output.mp4")
 
-        sequence = build_doodle_sequence(sample, sec_per_line=1.0, output_mp4=out_mp4)
+        sequence = build_doodle_sequence(sample, sec_per_line=0.5, output_mp4=out_mp4)
         self.assertEqual(len(sequence), 2)
         self.assertTrue(os.path.exists(out_mp4))
         self.assertTrue(os.path.exists("doodle_prompts.json"))
