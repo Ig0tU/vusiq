@@ -1,0 +1,29 @@
+[project]
+name = "vusiq"
+version = "0.2.0"
+description = "Metamorphic black-and-white lyric doodle engine."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Ig0tU" }]
+keywords = ["lyrics", "visualization", "doodle", "gemini", "video"]
+dependencies = [
+  "google-genai>=2.0.0",
+  "pillow>=11.0.0",
+  "moviepy>=2.0.0",
+  "pydantic>=2.0.0",
+]
+
+[project.scripts]
+vusiq = "doodle_visualizer:main"
+
+[project.urls]
+Homepage = "https://github.com/Ig0tU/vusiq"
+Repository = "https://github.com/Ig0tU/vusiq"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["doodle_visualizer"]
